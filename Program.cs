@@ -1,10 +1,12 @@
 using EshopAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+
 
 var databaseUrl = builder.Configuration
     .GetConnectionString("DefaultConnection")
@@ -35,7 +37,7 @@ app.MapControllers();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
-
 app.UseHttpsRedirection();
 app.Run();
