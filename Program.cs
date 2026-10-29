@@ -29,9 +29,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("LocalFrontend", policy =>
+        policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
 
 var app = builder.Build();
 
+app.UseCors("LocalFrontend");
 app.MapControllers();
 
 if (app.Environment.IsDevelopment())
