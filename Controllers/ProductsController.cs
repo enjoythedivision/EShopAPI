@@ -30,5 +30,12 @@ namespace EshopAPI.Controllers
             if (product is null) return NotFound();
             return Ok(product);
         }
+
+        [HttpGet("category/{category}")]
+        public async Task<IActionResult> GetProductByCategory(Product.Category category)
+        {
+            var products = await _context.Products.Where(p => p.ProductCategory == category).ToListAsync();
+            return Ok(products);
+        }
     }
 }
