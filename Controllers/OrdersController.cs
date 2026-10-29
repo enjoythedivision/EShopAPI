@@ -1,4 +1,5 @@
 ﻿using EshopAPI.Data;
+using EshopAPI.DTOs;
 using EshopAPI.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,22 @@ namespace EshopAPI.Controllers
         public async Task<IActionResult> GetOrders()
         {
             var orders = await _context.Orders.Include(o => o.OrderItems).ToListAsync();
-            return Ok(orders);
+            var ordersResponse = orders.Select(order => new OrderResponseDto
+            {
+                Id = order.Id,
+                CustomerName = order.CustomerName,
+                Email = order.Email,
+                ShippingAddress = order.ShippingAddress,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                Items = order.OrderItems.Select(oi => new OrderItemResponseDto
+                {
+                    ProductId = oi.ProductId,
+                    Quantity = oi.Quantity,
+                    UnitPrice = oi.UnitPrice
+                }).ToList()
+            }).ToList();
+            return Ok(ordersResponse);
         }
 
         [HttpGet("{id}")]
@@ -29,27 +45,72 @@ namespace EshopAPI.Controllers
         {
             var order = await _context.Orders.Include(o => o.OrderItems).FirstOrDefaultAsync(p => p.Id == id);
             if (order is null) return NotFound();
-            return Ok(order);
+            var orderResponse = new OrderResponseDto
+            {
+                Id = order.Id,
+                CustomerName = order.CustomerName,
+                Email = order.Email,
+                ShippingAddress = order.ShippingAddress,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                Items = order.OrderItems.Select(oi => new OrderItemResponseDto
+                {
+                    ProductId = oi.ProductId,
+                    Quantity = oi.Quantity,
+                    UnitPrice = oi.UnitPrice
+                }).ToList()
+            };
+            return Ok(orderResponse);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateOrder(Order order)
+        public async Task<IActionResult> CreateOrder(CreateOrderDto orderDto)
         {
+            var order = new Order
+            {
+                CustomerName = orderDto.CustomerName,
+                Email = orderDto.Email,
+                ShippingAddress = orderDto.ShippingAddress,
+
+            };
+
             var totalAmount = 0m;
-            foreach (var orderItem in order.OrderItems)
+            
+            foreach (var orderItem in orderDto.Items)
             {
                 var product = await _context.Products.FindAsync(orderItem.ProductId);
                 if (product is null) return NotFound();
-                orderItem.UnitPrice = product.Price;
-                totalAmount += (orderItem.UnitPrice * orderItem.Quantity);
-                product.Stock -= orderItem.Quantity;
+                var orderItemEntity = new OrderItem
+                {
+                    ProductId = product.Id,
+                    Quantity = orderItem.Quantity,
+                    UnitPrice = product.Price
+                };
+                order.OrderItems.Add(orderItemEntity);
+                totalAmount += orderItemEntity.Quantity * orderItemEntity.UnitPrice;
+                product.Stock -= orderItemEntity.Quantity;
             }
 
             order.TotalAmount = totalAmount;
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetOrderById), new { id = order.Id}, order);
+            var orderResponse = new OrderResponseDto
+            {
+                Id = order.Id,
+                CustomerName = order.CustomerName,
+                Email = order.Email,
+                ShippingAddress = order.ShippingAddress,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                Items = order.OrderItems.Select(oi => new OrderItemResponseDto
+                {
+                    ProductId = oi.ProductId,
+                    Quantity = oi.Quantity,
+                    UnitPrice = oi.UnitPrice
+                }).ToList()
+            };
+            return CreatedAtAction(nameof(GetOrderById), new { id = order.Id }, orderResponse);
         }
 
         [HttpDelete("{id}")]
