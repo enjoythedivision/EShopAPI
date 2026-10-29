@@ -54,6 +54,9 @@ namespace EshopAPI.Controllers
             if (productToEdit is null) return NotFound();
 
             productToEdit.Title = product.Title;
+            productToEdit.ImageUrl = product.ImageUrl;
+            productToEdit.Stock = product.Stock;
+            productToEdit.Artist = product.Artist;
             productToEdit.Description = product.Description;
             productToEdit.Price = product.Price;
             productToEdit.ProductCategory = product.ProductCategory;
