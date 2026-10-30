@@ -70,22 +70,28 @@ namespace EshopAPI.Controllers
             {
                 CustomerName = orderDto.CustomerName,
                 Email = orderDto.Email,
-                ShippingAddress = orderDto.ShippingAddress,
-
+                ShippingAddress = orderDto.ShippingAddress
             };
 
             var totalAmount = 0m;
-            
+
             foreach (var orderItem in orderDto.Items)
             {
                 var product = await _context.Products.FindAsync(orderItem.ProductId);
                 if (product is null) return NotFound();
+
+                if (orderItem.Quantity > product.Stock)
+                {
+                    return BadRequest($"Not enough stock for {product.Title}.");
+                }
+
                 var orderItemEntity = new OrderItem
                 {
                     ProductId = product.Id,
                     Quantity = orderItem.Quantity,
                     UnitPrice = product.Price
                 };
+
                 order.OrderItems.Add(orderItemEntity);
                 totalAmount += orderItemEntity.Quantity * orderItemEntity.UnitPrice;
                 product.Stock -= orderItemEntity.Quantity;
@@ -121,8 +127,6 @@ namespace EshopAPI.Controllers
             _context.Orders.Remove(orderToDelete);
             await _context.SaveChangesAsync();
             return NoContent();
-            
         }
-
     }
 }
