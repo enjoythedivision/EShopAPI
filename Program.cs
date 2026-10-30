@@ -35,7 +35,10 @@ builder.Services.AddControllers()
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("LocalFrontend", policy =>
-        policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
+        policy.WithOrigins(
+                "http://localhost:5173",
+                "https://localhost:5173",
+                "https://e-shop-client-six.vercel.app")
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
