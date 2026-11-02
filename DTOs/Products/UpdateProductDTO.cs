@@ -16,7 +16,7 @@ namespace EshopAPI.DTOs
         [MaxLength(1000)]
         public string Description { get; set; } = string.Empty;
 
-        [Range(typeof(decimal), "0.01", "99999.99")]
+        [Range(typeof(decimal), "0.01", "99999.99", ParseLimitsInInvariantCulture = true)]
         public decimal Price { get; set; }
 
         [Range(0, int.MaxValue)]
